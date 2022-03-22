@@ -6,7 +6,6 @@ kind: Deployment
 {{- end }}
 metadata:
   name: {{ include "flink.fullname" . }}-jobmanager
-  namespace: default
   labels:
 {{ include "flink.labels" . | indent 4 }}
     component: jobmanager

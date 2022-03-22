@@ -6,8 +6,6 @@ nameOverride: ""
 fullnameOverride: ""
 
 image:
-  repository: gimral/kaniko-test
-  tag: latest
   pullPolicy: IfNotPresent
 imagePullSecrets: []
 
