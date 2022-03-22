@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-{{- if .Values.jobmanager.statefulset }}
+{{- if .Values.global.jobmanager.statefulset }}
 kind: StatefulSet
 {{- else }}
 kind: Deployment
@@ -10,13 +10,13 @@ metadata:
 {{ include "flink.labels" . | indent 4 }}
     component: jobmanager
   annotations:
-  {{- range $key, $value := .Values.jobmanager.annotations }}
+  {{- range $key, $value := .Values.global.jobmanager.annotations }}
     {{ $key | quote }}: {{ $value | quote }}
   {{- end }}
 spec:
-  replicas: {{ .Values.jobmanager.replicaCount }}
-  {{- if .Values.jobmanager.statefulset }}
-  podManagementPolicy: {{ .Values.jobmanager.podManagementPolicy }}
+  replicas: {{ .Values.global.jobmanager.replicaCount }}
+  {{- if .Values.global.jobmanager.statefulset }}
+  podManagementPolicy: {{ .Values.global.jobmanager.podManagementPolicy }}
   {{- else }}
   strategy:
     type: Recreate
@@ -26,7 +26,7 @@ spec:
       app.kubernetes.io/name: {{ include "flink.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       component: jobmanager
-  {{- if .Values.jobmanager.statefulset }}
+  {{- if .Values.global.jobmanager.statefulset }}
   serviceName: {{ include "flink.fullname" . }}-jobmanager-headless
   {{- end }}
   template:
@@ -36,19 +36,19 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
         component: jobmanager
       annotations:
-      {{- range $key, $value := .Values.jobmanager.podAnnotations }}
+      {{- range $key, $value := .Values.global.jobmanager.podAnnotations }}
         {{ $key | quote }}: {{ $value | quote }}
       {{- end }}
     spec:
-    {{- with .Values.imagePullSecrets }}
+    {{- with .Values.global.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
     {{- end }}
       serviceAccountName: {{ include "jobmanager.serviceAccount" . }}
       securityContext:
-        {{ toYaml .Values.securityContext | indent 8 }}
+        {{ toYaml .Values.global.securityContext | indent 8 }}
       initContainers:
-      {{- range $ct, $params := .Values.jobmanager.initContainers }}
+      {{- range $ct, $params := .Values.global.jobmanager.initContainers }}
         - name: {{ $ct }}
           image: {{ $params.image }}
           command:
@@ -58,9 +58,9 @@ spec:
       {{- end }}
       containers:
         - name: jobmanager
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          workingDir: {{ .Values.flink.workDir }}
+          image: "{{ .Values.global.image.repository }}:{{ .Values.global.image.tag }}"
+          imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+          workingDir: {{ .Values.global.flink.workDir }}
           #args: ["standalone-job", "--job-classname", "org.example.sideinput.SideInputTest"] # optional arguments: ["--job-id", "<job id>", "--fromSavepoint", "/path/to/savepoint", "--allowNonRestoredState"]
           command:
             - "/bin/bash"
@@ -68,68 +68,68 @@ spec:
             - {{ include "jobmanager.command" . | quote }}
           env:
             - name: JVM_ARGS
-              value: {{ tpl .Values.jobmanager.jvmArgs . | quote }}
+              value: {{ tpl .Values.global.jobmanager.jvmArgs . | quote }}
             - name: FLINK_POD_IP
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-          {{- if .Values.extraEnvs }}
-          {{- toYaml .Values.extraEnvs | nindent 12 }}
+          {{- if .Values.global.extraEnvs }}
+          {{- toYaml .Values.global.extraEnvs | nindent 12 }}
           {{- end }}
-          {{- if .Values.jobmanager.extraEnvs }}
-          {{- toYaml .Values.jobmanager.extraEnvs | nindent 12 }}
+          {{- if .Values.global.jobmanager.extraEnvs }}
+          {{- toYaml .Values.global.jobmanager.extraEnvs | nindent 12 }}
           {{- end }}
           envFrom:
-          {{- if and .Values.secrets.bitnamiSealedSecrets.enabled .Values.secrets.bitnamiSealedSecrets.sealedSecretEnvs }}
+          {{- if and .Values.global.secrets.bitnamiSealedSecrets.enabled .Values.global.secrets.bitnamiSealedSecrets.sealedSecretEnvs }}
             - secretRef:
                 name: {{ .Release.Name }}-secretenvs
           {{- end }}
           ports:
-          {{- range $name, $port := .Values.jobmanager.ports }}
+          {{- range $name, $port := .Values.global.jobmanager.ports }}
             - containerPort: {{ $port }}
               name: {{ $name }}
           {{- end }}
-          {{- if .Values.flink.monitoring.enabled }}
-            - containerPort: {{ .Values.flink.monitoring.port }}
+          {{- if .Values.global.flink.monitoring.enabled }}
+            - containerPort: {{ .Values.global.flink.monitoring.port }}
               name: metrics
           {{- end }}
-          {{- if .Values.jobmanager.highAvailability.enabled }}
-            - containerPort: {{ .Values.jobmanager.highAvailability.syncPort }}
+          {{- if .Values.global.jobmanager.highAvailability.enabled }}
+            - containerPort: {{ .Values.global.jobmanager.highAvailability.syncPort }}
               name: ha
           {{- end }}
           readinessProbe:
             tcpSocket:
-           {{- if .Values.jobmanager.highAvailability.enabled }}
-              port: {{ .Values.jobmanager.highAvailability.syncPort }}
+           {{- if .Values.global.jobmanager.highAvailability.enabled }}
+              port: {{ .Values.global.jobmanager.highAvailability.syncPort }}
            {{- else }}
-              port: {{ .Values.jobmanager.ports.rpc }}
+              port: {{ .Values.global.jobmanager.ports.rpc }}
             {{- end }}
-            periodSeconds: {{ .Values.jobmanager.readinessProbe.periodSeconds }}
-            initialDelaySeconds: {{ .Values.jobmanager.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.global.jobmanager.readinessProbe.periodSeconds }}
+            initialDelaySeconds: {{ .Values.global.jobmanager.readinessProbe.initialDelaySeconds }}
           livenessProbe:
             tcpSocket:
-              port: {{ .Values.jobmanager.ports.blob }}
-            initialDelaySeconds: {{ .Values.jobmanager.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.jobmanager.livenessProbe.periodSeconds }}
+              port: {{ .Values.global.jobmanager.ports.blob }}
+            initialDelaySeconds: {{ .Values.global.jobmanager.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.global.jobmanager.livenessProbe.periodSeconds }}
           volumeMounts:
             - name: flink-config-volume
-              mountPath: {{ .Values.flink.workDir }}/conf/flink-conf.yaml.tpl
+              mountPath: {{ .Values.global.flink.workDir }}/conf/flink-conf.yaml.tpl
               subPath: flink-conf.yaml.tpl
             - name: flink-config-volume
-              mountPath: {{ .Values.flink.workDir }}/conf/log4j.properties
+              mountPath: {{ .Values.global.flink.workDir }}/conf/log4j.properties
               subPath: log4j.properties
             - name: flink-config-volume
-              mountPath: {{ .Values.flink.workDir }}/conf/log4j-console.properties
+              mountPath: {{ .Values.global.flink.workDir }}/conf/log4j-console.properties
               subPath: log4j.properties
             - name: flink-config-volume
-              mountPath: {{ .Values.flink.workDir }}/conf/security.properties
+              mountPath: {{ .Values.global.flink.workDir }}/conf/security.properties
               subPath: security.properties
-              {{- if .Values.jobmanager.highAvailability.enabled }}
+              {{- if .Values.global.jobmanager.highAvailability.enabled }}
             - name: flink-config-volume
-              mountPath: {{ .Values.flink.workDir }}/conf/masters
+              mountPath: {{ .Values.global.flink.workDir }}/conf/masters
               subPath: masters
               {{- end }}
-          {{- range $secret := .Values.secrets.kubernetesSecrets }}
+          {{- range $secret := .Values.global.secrets.kubernetesSecrets }}
             {{- if $secret.mountPath }}
               {{- if $secret.keys }}
                 {{- range $key := $secret.keys }}
@@ -145,19 +145,19 @@ spec:
               {{- end }}
             {{- end }}
           {{- end }}
-          {{- if .Values.jobmanager.extraVolumeMounts -}}
-            {{ toYaml .Values.jobmanager.extraVolumeMounts | nindent 12 }}
+          {{- if .Values.global.jobmanager.extraVolumeMounts -}}
+            {{ toYaml .Values.global.jobmanager.extraVolumeMounts | nindent 12 }}
           {{- end }}
-          {{- if and .Values.jobmanager.persistent.enabled .Values.jobmanager.statefulset }}
+          {{- if and .Values.global.jobmanager.persistent.enabled .Values.global.jobmanager.statefulset }}
             - name: jobmanager-data
-              mountPath: {{ .Values.jobmanager.persistent.mountPath }}
+              mountPath: {{ .Values.global.jobmanager.persistent.mountPath }}
           {{- end }}
-          {{- if and (and .Values.secrets.bitnamiSealedSecrets.enabled .Values.secrets.bitnamiSealedSecrets.sealedSecretFiles) .Values.secrets.bitnamiSealedSecrets.sealedSecretFilesPath }}
+          {{- if and (and .Values.global.secrets.bitnamiSealedSecrets.enabled .Values.global.secrets.bitnamiSealedSecrets.sealedSecretFiles) .Values.global.secrets.bitnamiSealedSecrets.sealedSecretFilesPath }}
             - name: sealed-secret-files
-              mountPath: {{ .Values.secrets.bitnamiSealedSecrets.sealedSecretFilesPath }}
+              mountPath: {{ .Values.global.secrets.bitnamiSealedSecrets.sealedSecretFilesPath }}
           {{- end }}
           resources:
-            {{- toYaml .Values.jobmanager.resources | nindent 12 }}
+            {{- toYaml .Values.global.jobmanager.resources | nindent 12 }}
 
       volumes:
         - name: flink-config-volume
@@ -170,37 +170,37 @@ spec:
                 path: log4j.properties
               - key: security.properties
                 path: security.properties
-              {{- if .Values.jobmanager.highAvailability.enabled }}
+              {{- if .Values.global.jobmanager.highAvailability.enabled }}
               - key: masters
                 path: masters
               {{- end }}
-      {{- range .Values.secrets.kubernetesSecrets }}
+      {{- range .Values.global.secrets.kubernetesSecrets }}
         - name: {{ include "flink.fullname" $ }}-{{ .name }}
           secret:
             secretName: {{ .name }}
       {{- end }}
-      {{- if .Values.jobmanager.extraVolumes -}}
-        {{ toYaml .Values.jobmanager.extraVolumes | nindent 8 }}
+      {{- if .Values.global.jobmanager.extraVolumes -}}
+        {{ toYaml .Values.global.jobmanager.extraVolumes | nindent 8 }}
       {{- end }}
-      {{- if and (and .Values.secrets.bitnamiSealedSecrets.enabled .Values.secrets.bitnamiSealedSecrets.sealedSecretFiles) .Values.secrets.bitnamiSealedSecrets.sealedSecretFilesPath }}
+      {{- if and (and .Values.global.secrets.bitnamiSealedSecrets.enabled .Values.global.secrets.bitnamiSealedSecrets.sealedSecretFiles) .Values.global.secrets.bitnamiSealedSecrets.sealedSecretFilesPath }}
         - name: sealed-secret-files
           secret:
             secretName: {{ .Release.Name }}-secretfiles
       {{- end }}
 
-      {{- with .Values.jobmanager.nodeSelector }}
+      {{- with .Values.global.jobmanager.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-    {{- with .Values.jobmanager.affinity }}
+    {{- with .Values.global.jobmanager.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.jobmanager.tolerations }}
+    {{- with .Values.global.jobmanager.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-{{- if and .Values.jobmanager.persistent.enabled .Values.jobmanager.statefulset }}
+{{- if and .Values.global.jobmanager.persistent.enabled .Values.global.jobmanager.statefulset }}
   volumeClaimTemplates:
     - metadata:
         name: jobmanager-data
@@ -209,10 +209,10 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        {{- if eq (kindIs "invalid" .Values.jobmanager.persistent.storageClass) false }}
-        storageClassName: {{ .Values.jobmanager.persistent.storageClass | quote }}
+        {{- if eq (kindIs "invalid" .Values.global.jobmanager.persistent.storageClass) false }}
+        storageClassName: {{ .Values.global.jobmanager.persistent.storageClass | quote }}
         {{- end }}
         resources:
           requests:
-            storage: {{ .Values.jobmanager.persistent.size }}
+            storage: {{ .Values.global.jobmanager.persistent.size }}
 {{- end }}

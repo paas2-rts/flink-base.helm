@@ -1,4 +1,4 @@
-{{- if .Values.prometheus.serviceMonitor.enabled }}
+{{- if .Values.global.prometheus.serviceMonitor.enabled }}
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -6,11 +6,11 @@ metadata:
   name: 'flink-jobmanager'
   labels:
 {{ include "flink.labels" . | indent 4 }}
-{{ toYaml .Values.prometheus.serviceMonitor.selector | indent 4 }}
+{{ toYaml .Values.global.prometheus.serviceMonitor.selector | indent 4 }}
   namespace: {{ include "serviceMonitor.namespace" . }}
 spec:
   endpoints:
-    - interval: {{ .Values.prometheus.serviceMonitor.interval }}
+    - interval: {{ .Values.global.prometheus.serviceMonitor.interval }}
       path: /
       port: metrics
   namespaceSelector:
@@ -32,11 +32,11 @@ metadata:
   namespace: default
   labels:
 {{ include "flink.labels" . | indent 4 }}
-{{ toYaml .Values.prometheus.serviceMonitor.selector | indent 4 }}
+{{ toYaml .Values.global.prometheus.serviceMonitor.selector | indent 4 }}
   namespace: {{ include "serviceMonitor.namespace" . }}
 spec:
   endpoints:
-    - interval: {{ .Values.prometheus.serviceMonitor.interval }}
+    - interval: {{ .Values.global.prometheus.serviceMonitor.interval }}
       path: /
       port: metrics
   namespaceSelector:

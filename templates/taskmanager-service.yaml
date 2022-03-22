@@ -5,21 +5,21 @@ metadata:
   labels:
 {{ include "flink.labels" . | indent 4 }}
     component: taskmanager
-{{- if .Values.taskmanager.service.annotations }}
+{{- if .Values.global.taskmanager.service.annotations }}
   annotations:
-{{ toYaml .Values.taskmanager.service.annotations | indent 4 }}
+{{ toYaml .Values.global.taskmanager.service.annotations | indent 4 }}
 {{- end }}
 spec:
-  type: {{ .Values.taskmanager.service.type }}
+  type: {{ .Values.global.taskmanager.service.type }}
   ports:
-    {{- range $name, $port := .Values.taskmanager.ports }}
+    {{- range $name, $port := .Values.global.taskmanager.ports }}
     - port: {{ $port }}
       targetPort: {{ $name }}
       protocol: TCP
       name: {{ $name }}
     {{- end }}
-    {{- if .Values.flink.monitoring.enabled }}
-    - port: {{ .Values.flink.monitoring.port }}
+    {{- if .Values.global.flink.monitoring.enabled }}
+    - port: {{ .Values.global.flink.monitoring.port }}
       targetPort: metrics
       protocol: TCP
       name: metrics

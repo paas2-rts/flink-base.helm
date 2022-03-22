@@ -1,4 +1,4 @@
-{{- if .Values.jobmanager.statefulset }}
+{{- if .Values.global.jobmanager.statefulset }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -6,21 +6,21 @@ metadata:
   labels:
 {{ include "flink.labels" . | indent 4 }}
     component: jobmanager
-{{- if .Values.jobmanager.service.headless.annotations }}
+{{- if .Values.global.jobmanager.service.headless.annotations }}
   annotations:
-{{ toYaml .Values.jobmanager.service.headless.annotations | indent 4 }}
+{{ toYaml .Values.global.jobmanager.service.headless.annotations | indent 4 }}
 {{- end }}
 spec:
   clusterIP: None
   ports:
-    {{- range $name, $port := .Values.jobmanager.ports }}
+    {{- range $name, $port := .Values.global.jobmanager.ports }}
     - port: {{ $port }}
       targetPort: {{ $name }}
       protocol: TCP
       name: {{ $name }}
     {{- end }}
-    {{- if .Values.flink.monitoring.enabled }}
-    - port: {{ .Values.flink.monitoring.port }}
+    {{- if .Values.global.flink.monitoring.enabled }}
+    - port: {{ .Values.global.flink.monitoring.port }}
       targetPort: metrics
       protocol: TCP
       name: metrics

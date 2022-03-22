@@ -5,27 +5,27 @@ metadata:
   labels:
 {{ include "flink.labels" . | indent 4 }}
     component: jobmanager
-{{- if .Values.jobmanager.service.annotations }}
+{{- if .Values.global.jobmanager.service.annotations }}
   annotations:
-{{ toYaml .Values.jobmanager.service.annotations | indent 4 }}
+{{ toYaml .Values.global.jobmanager.service.annotations | indent 4 }}
 {{- end }}
 spec:
-  type: {{ .Values.jobmanager.service.type }}
+  type: {{ .Values.global.jobmanager.service.type }}
   ports:
-    {{- range $name, $port := .Values.jobmanager.ports }}
+    {{- range $name, $port := .Values.global.jobmanager.ports }}
     - port: {{ $port }}
       targetPort: {{ $name }}
       protocol: TCP
       name: {{ $name }}
     {{- end }}
-    {{- if .Values.jobmanager.highAvailability.enabled }}
-    - port: {{ .Values.jobmanager.highAvailability.syncPort }}
+    {{- if .Values.global.jobmanager.highAvailability.enabled }}
+    - port: {{ .Values.global.jobmanager.highAvailability.syncPort }}
       targetPort: ha
       protocol: TCP
       name: ha
     {{- end }}
-    {{- if .Values.flink.monitoring.enabled }}
-    - port: {{ .Values.flink.monitoring.port }}
+    {{- if .Values.global.flink.monitoring.enabled }}
+    - port: {{ .Values.global.flink.monitoring.port }}
       targetPort: metrics
       protocol: TCP
       name: metrics
